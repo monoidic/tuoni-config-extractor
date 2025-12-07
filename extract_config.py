@@ -108,8 +108,8 @@ config_structure = {
                             "ident": 140,
                             "name": "headers",
                             "children": [
-                                {"ident": 1, "name": "name"},
-                                {"ident": 2, "name": "value"},
+                                {"ident": 1, "name": "name", "type": "str"},
+                                {"ident": 2, "name": "value", "type": "str"},
                             ],
                         },
                     ],
@@ -133,25 +133,17 @@ rsa_config_structure = {
 
 
 def map_tlv(t: TLV, desc: dict[str, Any]) -> Any:
-    if desc.get("is_array"):
-        # array
-        arr_desc = desc["element"]
-        print(t.children(), arr_desc)
-        ret = [map_tlv_elements(tlv_child, arr_desc) for tlv_child in t.children()]
-        return ret
-
     desc_children = desc.get("children")
-    if not desc_children:
-        # leaf node
-        ret = t.data
-        v_type = desc.get("type")
-        if v_type:
-            ret = type_map[v_type](ret)
+    if desc_children:
+        # dict
+        ret = map_tlv_elements(t, desc_children)
         return ret
 
-    # dict
-    ret = map_tlv_elements(t, desc_children)
-
+    # leaf node
+    ret = t.data
+    v_type = desc.get("type")
+    if v_type:
+        ret = type_map[v_type](ret)
     return ret
 
 
