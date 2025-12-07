@@ -82,11 +82,7 @@ config_structure = {
                             "children": [
                                 {"ident": 1, "name": "c2_host", "type": "str"},
                                 {"ident": 2, "name": "sleep", "type": "int32"},
-                                {
-                                    "ident": 3,
-                                    "name": "sleepRandom",
-                                    "type": "int32",
-                                },
+                                {"ident": 3, "name": "sleepRandom", "type": "int32"},
                             ],
                         },
                         {"ident": 2, "name": "port", "type": "int32"},
