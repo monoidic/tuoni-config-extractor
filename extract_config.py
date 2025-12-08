@@ -223,11 +223,11 @@ def main() -> None:
         b = b[len(t2) :]
         assert len(b) == 0
 
+        print()
         if args.show_raw:
             t2d = t2.to_dict()
             print(t2d)
         mapped_rsa = map_tlv(t2, rsa_config_structure)
-        print()
         print(mapped_rsa)
 
 
