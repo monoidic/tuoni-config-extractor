@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
 import re
 from dataclasses import dataclass
 import argparse
 from typing import Any
+import windows
+import linux
 
 pattern = re.compile(r"[ABCDEFGHIJKLMNOP]{50000,}".encode())
 
@@ -181,28 +182,36 @@ def main() -> None:
         action="store_true",
         help="argument is to an extracted config structure; avoid trying to locate and decode it",
     )
+    parser.add_argument("--out", help="file to output raw config to")
 
     args = parser.parse_args()
 
-    with open(args.file_path, "rb") as fd:
-        raw = fd.read()
-
     if args.direct:
-        b = raw
+        with open(args.file_path, "rb") as fd:
+            config = fd.read()
     else:
-        match = pattern.search(raw)
-        if not match:
-            raise Exception("config not found in file")
-        config = match.group(0).decode()
+        with open(args.file_path, "rb") as fd:
+            header = fd.read(4)
 
-        trans = str.maketrans(
-            {k: v for k, v in zip("ABCDEFGHIJKLMNOP", "0123456789ABCDEF")}
-        )
-        hex = config.translate(trans)
+        if header == b"MZ\x90\x00":
+            config = windows.extract_config(args.file_path)
+        elif header == b"\x7fELF":
+            config = linux.extract_config(args.file_path)
+        else:
+            # try scanning for windows hex
+            with open(args.file_path, "rb") as fd:
+                raw = fd.read()
+            match = pattern.search(raw)
+            if not match:
+                raise Exception("unexpected file format")
+            hex = match.group(0).decode()
+            config = windows.decode_hex(hex)
 
-        b = bytes.fromhex(hex)
+    if args.out:
+        with open(args.out, "wb") as fd:
+            fd.write(config)
 
-    t = TLV.from_bytes(b)
+    t = TLV.from_bytes(config)
 
     if args.show_raw:
         td = t.to_dict()
@@ -217,11 +226,11 @@ def main() -> None:
 
     print(mapped)
 
-    b = b[len(t) :]
-    if b:
-        t2 = TLV.from_bytes(b)
-        b = b[len(t2) :]
-        assert len(b) == 0
+    config = config[len(t) :]
+    if config:
+        t2 = TLV.from_bytes(config)
+        config = config[len(t2) :]
+        assert len(config) == 0
 
         print()
         if args.show_raw:
