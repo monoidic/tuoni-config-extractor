@@ -193,7 +193,7 @@ def main() -> None:
         with open(args.file_path, "rb") as fd:
             header = fd.read(4)
 
-        if header == b"MZ\x90\x00":
+        if header[:2] == b"MZ":
             config = windows.extract_config(args.file_path)
         elif header == b"\x7fELF":
             config = linux.extract_config(args.file_path)
