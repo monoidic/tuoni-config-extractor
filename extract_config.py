@@ -1,65 +1,13 @@
 #!/usr/bin/env python3
 
 import re
-from dataclasses import dataclass
 import argparse
 from typing import Any
-import windows
-import linux
+import windows_config
+import linux_config
+from tlv import TLV
 
 pattern = re.compile(r"[ABCDEFGHIJKLMNOP]{50000,}".encode())
-
-
-@dataclass
-class TLV:
-    ident: int
-    # uint32le len(data)
-    data: bytes
-
-    @staticmethod
-    def from_bytes(b: bytes) -> "TLV":
-        if len(b) < 5:
-            raise Exception("invalid length")
-        ident = b[0]
-        length = int.from_bytes(b[1:5], "little")
-        data = b[5 : 5 + length]
-        if len(data) != length:
-            raise Exception("invalid length")
-
-        return TLV(ident, data)
-
-    def __len__(self) -> int:
-        return 5 + len(self.data)
-
-    def to_bytes(self) -> bytes:
-        ret = bytearray()
-        ret.append(self.ident)
-        ret.extend(int.to_bytes(len(self.data), 4, "little"))
-        ret.extend(self.data)
-        return bytes(ret)
-
-    def children(self) -> list["TLV"]:
-        off = 0
-        ret: list[TLV] = []
-        try:
-            while off < len(self.data):
-                child = TLV.from_bytes(self.data[off:])
-                off += len(child)
-                ret.append(child)
-        except Exception as e:
-            return []
-
-        return ret
-
-    def to_dict(self) -> dict[str, Any]:
-        ret: dict[str, Any] = {"ident": self.ident}
-        children = self.children()
-        if children:
-            ret["children"] = [child.to_dict() for child in children]
-        else:
-            ret["data"] = self.data
-
-        return ret
 
 
 config_structure = {
@@ -194,9 +142,9 @@ def main() -> None:
             header = fd.read(4)
 
         if header[:2] == b"MZ":
-            config = windows.extract_config(args.file_path)
+            config = windows_config.extract_config(args.file_path)
         elif header == b"\x7fELF":
-            config = linux.extract_config(args.file_path)
+            config = linux_config.extract_config(args.file_path)
         else:
             # try scanning for windows hex
             with open(args.file_path, "rb") as fd:
@@ -205,7 +153,7 @@ def main() -> None:
             if not match:
                 raise Exception("unexpected file format")
             hex = match.group(0).decode()
-            config = windows.decode_hex(hex)
+            config = windows_config.decode_hex(hex)
 
     if args.out:
         with open(args.out, "wb") as fd:

@@ -5,7 +5,6 @@ import pefile
 
 def extract_config(path: str) -> bytes:
     pe = pefile.PE(path)
-    # print(x)
     (struct,) = (
         entry3.data
         for entry in pe.DIRECTORY_ENTRY_RESOURCE.entries
@@ -16,7 +15,6 @@ def extract_config(path: str) -> bytes:
 
     off = struct.struct.OffsetToData
     size = struct.struct.Size
-    # print(rva, size, type(encoded.struct))
 
     data = pe.get_memory_mapped_image()[off : off + size].decode()
 
