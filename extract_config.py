@@ -48,7 +48,8 @@ config_structure = {
                         {"ident": 16, "name": "webproxy", "type": "str"},
                         {"ident": 17, "name": "webProxyUsername", "type": "str"},
                         {"ident": 18, "name": "webProxyPassword", "type": "str"},
-                        {"ident": 19, "name": "unknown3", "type": "int32"},
+                        {"ident": 19, "name": "webProxyWindowsAuth", "type": "int32"},
+                        {"ident": 20, "name": "keepConnectionsAlive", "type": "int32"},
                         {
                             "ident": 140,
                             "name": "headers",

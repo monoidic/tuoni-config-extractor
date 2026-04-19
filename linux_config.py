@@ -2,7 +2,7 @@
 
 import elftools.elf.elffile
 
-PADSIZE = 8
+PADSIZE = 0
 SIZE_LEN = 4
 DATA_OFF = PADSIZE + SIZE_LEN
 
